@@ -7,7 +7,6 @@ use Illuminate\Database\Eloquent\Model;
 class Subscription extends Model
 {
     protected $fillable = [
-        'gym_id',
         'member_id',
         'plan_id',
         'start_date',
@@ -28,11 +27,6 @@ class Subscription extends Model
     public function plan()
     {
         return $this->belongsTo(Plan::class);
-    }
-
-    public function gym()
-    {
-        return $this->belongsTo(Gym::class);
     }
 
     public function scopeActive($query)

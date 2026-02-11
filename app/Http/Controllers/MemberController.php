@@ -10,15 +10,9 @@ use Illuminate\Support\Facades\DB;
 
 class MemberController extends Controller
 {
-    private function getGym()
-    {
-        return auth()->user()->gym;
-    }
-
     public function index(Request $request)
     {
-        $gym = $this->getGym();
-        $query = $gym->members()->with(['subscriptions.plan.trainingType']);
+        $query = Member::with(['subscriptions.plan.trainingType']);
 
         // Filter by Training Type
         if ($request->filled('training_type_id')) {
@@ -51,35 +45,80 @@ class MemberController extends Controller
         }
 
         $members = $query->latest()->paginate(10);
-        $trainingTypes = $gym->trainingTypes;
+        $trainingTypes = TrainingType::all();
 
         // Calculate counts
         $counts = [
             'status' => [
-                'all' => $gym->members()->count(),
-                'active' => $gym->members()->active()->count(),
-                'expired' => $gym->members()->expired()->count(),
-                'inactive' => $gym->members()->inactive()->count(),
+                'all' => Member::count(),
+                'active' => Member::active()->count(),
+                'expired' => Member::expired()->count(),
+                'inactive' => Member::inactive()->count(),
             ],
             'training_type' => [
-                'all' => $gym->members()->count(),
+                'all' => Member::count(),
             ]
         ];
 
         foreach ($trainingTypes as $type) {
-            $counts['training_type'][$type->id] = $gym->members()->whereHas('subscriptions.plan', function($q) use ($type) {
+            $counts['training_type'][$type->id] = Member::whereHas('subscriptions.plan', function($q) use ($type) {
                 $q->where('training_type_id', $type->id);
             })->count();
         }
+
+        // Prepare filters for header
+        $filters = [];
         
-        return view('members.index', compact('members', 'trainingTypes', 'counts'));
+        // Status filters
+        $filters[] = [
+            'label' => 'All',
+            'url' => request()->fullUrlWithQuery(['status' => '', 'training_type_id' => '']),
+            'active' => !request('status') && !request('training_type_id'),
+            'count' => $counts['status']['all']
+        ];
+        $filters[] = [
+            'label' => 'Active',
+            'url' => request()->fullUrlWithQuery(['status' => 'active']),
+            'active' => request('status') == 'active',
+            'count' => $counts['status']['active']
+        ];
+        $filters[] = [
+            'label' => 'Expired',
+            'url' => request()->fullUrlWithQuery(['status' => 'expired']),
+            'active' => request('status') == 'expired',
+            'count' => $counts['status']['expired']
+        ];
+        $filters[] = [
+            'label' => 'Inactive',
+            'url' => request()->fullUrlWithQuery(['status' => 'inactive']),
+            'active' => request('status') == 'inactive',
+            'count' => $counts['status']['inactive']
+        ];
+        
+        // Training type filters
+        foreach ($trainingTypes as $type) {
+            $filters[] = [
+                'label' => $type->name,
+                'url' => request()->fullUrlWithQuery(['training_type_id' => $type->id]),
+                'active' => request('training_type_id') == $type->id,
+                'count' => $counts['training_type'][$type->id] ?? 0
+            ];
+        }
+        
+        return view('members.index', compact('members', 'trainingTypes', 'counts', 'filters'))
+            ->with('pageTitle', 'Members Management')
+            ->with('pageActionUrl', route('members.create', ['training_type_id' => request('training_type_id')]))
+            ->with('pageActionLabel', 'Add Member')
+            ->with('pageShowAction', true)
+            ->with('pageSearchRoute', route('members.index'))
+            ->with('pageSearchPlaceholder', 'Search by name, CIN, or phone...')
+            ->with('pageShowSearch', true);
     }
 
     public function create(Request $request)
     {
-        $gym = $this->getGym();
-        // Get all active plans sorted by training type for this gym
-        $trainingTypes = $gym->trainingTypes()->with(['plans' => function($query) {
+        // Get all active plans sorted by training type
+        $trainingTypes = TrainingType::with(['plans' => function($query) {
             $query->active();
         }])->get();
 
@@ -87,19 +126,20 @@ class MemberController extends Controller
             'trainingTypes' => $trainingTypes,
             'preselectedTrainingTypeId' => $request->training_type_id,
             'preselectedPlanId' => $request->plan_id
-        ]);
+        ])
+            ->with('pageTitle', 'Add New Member')
+            ->with('pageActionUrl', route('members.index'))
+            ->with('pageActionLabel', 'Back to Members')
+            ->with('pageShowAction', true);
     }
 
     public function store(\App\Http\Requests\StoreMemberRequest $request)
     {
-        $gym = $this->getGym();
-
         // Start Transaction
-        DB::transaction(function () use ($request, $gym) {
+        DB::transaction(function () use ($request) {
             
             // 1. Create Member
             $data = $request->validated();
-            $data['gym_id'] = $gym->id; // Assign to current gym
 
             if ($request->hasFile('photo')) {
                 $data['photo_path'] = $request->file('photo')->store('members', 'uploads');
@@ -108,8 +148,7 @@ class MemberController extends Controller
             $member = Member::create($data);
 
             // 2. Create Subscription
-            // Ensure plan belongs to this gym
-            $plan = $gym->plans()->findOrFail($request->plan_id);
+            $plan = Plan::findOrFail($request->plan_id);
             
             $startDate = \Carbon\Carbon::parse($request->start_date);
             
@@ -123,7 +162,6 @@ class MemberController extends Controller
             };
 
             $member->subscriptions()->create([
-                'gym_id' => $gym->id, // Add gym_id to subscription
                 'plan_id' => $plan->id,
                 'start_date' => $startDate,
                 'end_date' => $endDate,
@@ -136,27 +174,31 @@ class MemberController extends Controller
 
     public function show(Member $member)
     {
-        $this->authorizeMember($member);
         $member->load('subscriptions.plan.trainingType');
-        return view('members.show', compact('member'));
+        return view('members.show', compact('member'))
+            ->with('pageTitle', 'Member Details')
+            ->with('pageSubtitle', $member->full_name)
+            ->with('pageActionUrl', route('members.index'))
+            ->with('pageActionLabel', 'Back to Members')
+            ->with('pageShowAction', true);
     }
 
     public function edit(Member $member)
     {
-        $this->authorizeMember($member);
-        $gym = $this->getGym();
-        
-        $trainingTypes = $gym->trainingTypes()->with(['plans' => function($query) {
+        $trainingTypes = TrainingType::with(['plans' => function($query) {
             $query->active();
         }])->get();
 
-        return view('members.edit', compact('member', 'trainingTypes'));
+        return view('members.edit', compact('member', 'trainingTypes'))
+            ->with('pageTitle', 'Edit Member')
+            ->with('pageSubtitle', $member->full_name)
+            ->with('pageActionUrl', route('members.show', $member))
+            ->with('pageActionLabel', 'View Details')
+            ->with('pageShowAction', true);
     }
 
     public function update(Request $request, Member $member)
     {
-        $this->authorizeMember($member);
-        
         $validated = $request->validate([
             'full_name' => ['required', 'string', 'max:255'],
             'phone' => ['nullable', 'string', 'max:20'],
@@ -176,35 +218,32 @@ class MemberController extends Controller
 
     public function destroy(Member $member)
     {
-        $this->authorizeMember($member);
         $member->delete();
         return redirect()->route('members.index')->with('success', 'Member deleted successfully.');
     }
 
     public function renew(Member $member)
     {
-        $this->authorizeMember($member);
-        $gym = $this->getGym();
-        
-        $trainingTypes = $gym->trainingTypes()->with(['plans' => function($query) {
+        $trainingTypes = TrainingType::with(['plans' => function($query) {
             $query->active();
         }])->get();
 
-        return view('members.renew', compact('member', 'trainingTypes'));
+        return view('members.renew', compact('member', 'trainingTypes'))
+            ->with('pageTitle', 'Renew Subscription')
+            ->with('pageSubtitle', $member->full_name)
+            ->with('pageActionUrl', route('members.show', $member))
+            ->with('pageActionLabel', 'Back to Member')
+            ->with('pageShowAction', true);
     }
 
     public function storeRenewal(Request $request, Member $member)
     {
-        $this->authorizeMember($member);
-        $gym = $this->getGym();
-
         $validated = $request->validate([
             'plan_id' => ['required', 'exists:plans,id'],
             'start_date' => ['required', 'date'],
         ]);
 
-        // Ensure plan belongs to gym
-        $plan = $gym->plans()->findOrFail($validated['plan_id']);
+        $plan = Plan::findOrFail($validated['plan_id']);
         
         $startDate = \Carbon\Carbon::parse($validated['start_date']);
         
@@ -218,7 +257,6 @@ class MemberController extends Controller
         };
 
         $member->subscriptions()->create([
-            'gym_id' => $gym->id, // Add gym_id
             'plan_id' => $plan->id,
             'start_date' => $startDate,
             'end_date' => $endDate,
@@ -226,12 +264,5 @@ class MemberController extends Controller
         ]);
 
         return redirect()->route('members.index')->with('success', 'Subscription renewed successfully.');
-    }
-
-    private function authorizeMember(Member $member)
-    {
-        if ($member->gym_id !== auth()->user()->gym_id) {
-            abort(403, 'Unauthorized action.');
-        }
     }
 }

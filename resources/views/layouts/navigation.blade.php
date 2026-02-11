@@ -1,136 +1,173 @@
-<nav x-data="{ open: false }" class="bg-zinc-900 border-b md:border-b-0 md:border-r border-zinc-800 md:w-72 md:min-h-screen md:flex md:flex-col flex-shrink-0">
-    <!-- Primary Navigation Menu -->
-    <div class="px-4 sm:px-6 md:px-0 flex justify-between items-center h-20 md:h-auto md:block md:flex-1">
+<nav x-data="{ mobileOpen: false }"
+     x-ref="sidebar"
+     @toggle-mobile-sidebar.window="mobileOpen = !mobileOpen"
+     :class="$store.sidebar.open ? 'lg:w-64' : 'lg:w-16'"
+     class="fixed left-0 top-0 h-screen bg-white border-r border-gray-200 z-40 transition-all duration-300 ease-in-out flex flex-col overflow-hidden w-0 lg:w-64">
+    
+    <!-- Mobile Overlay -->
+    <div x-show="mobileOpen" 
+         @click="mobileOpen = false"
+         x-transition:enter="transition-opacity ease-linear duration-300"
+         x-transition:enter-start="opacity-0"
+         x-transition:enter-end="opacity-100"
+         x-transition:leave="transition-opacity ease-linear duration-300"
+         x-transition:leave-start="opacity-100"
+         x-transition:leave-end="opacity-0"
+         class="fixed inset-0 bg-gray-600 bg-opacity-75 z-30 lg:hidden"></div>
 
-        <!-- Logo Section -->
-        <div class="shrink-0 flex items-center md:h-24 md:justify-center md:border-b md:border-zinc-800 md:w-full">
-            <a href="{{ route('dashboard') }}" class="flex items-center gap-3 group px-6 md:px-0">
-                <div class="w-10 h-10 bg-orange-600 rounded-lg flex items-center justify-center shadow-lg shadow-orange-900/20 transition group-hover:scale-110">
-                    <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
+    <!-- Sidebar Content -->
+    <div :class="mobileOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'"
+         class="fixed lg:relative inset-y-0 left-0 w-64 lg:w-auto bg-white flex flex-col transition-transform duration-300 ease-in-out z-40">
+        
+        <!-- Logo Block -->
+        <div class="h-16 flex items-center px-4 border-b border-gray-200 shrink-0">
+            <button @click.stop="$store.sidebar.toggle()" 
+                    class="flex items-center gap-3 w-full group hover:bg-gray-50 rounded-lg p-2 transition-colors">
+                <div class="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center shrink-0">
+                    <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/>
                     </svg>
                 </div>
-                <span class="text-2xl text-white font-black italic tracking-tighter uppercase block">POWER<span class="text-orange-500">GYM</span></span>
-            </a>
-        </div>
-
-        <!-- Hamburger (Mobile Only) -->
-        <div class="-me-2 flex items-center md:hidden">
-            <button @click="open = ! open" class="inline-flex items-center justify-center p-2 rounded-lg text-zinc-400 hover:text-white hover:bg-zinc-800 focus:outline-none transition duration-150 ease-in-out">
-                <svg class="h-6 w-6" stroke="currentColor" fill="none" viewBox="0 0 24 24">
-                    <path :class="{'hidden': open, 'inline-flex': ! open }" class="inline-flex" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
-                    <path :class="{'hidden': ! open, 'inline-flex': open }" class="hidden" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
-                </svg>
+                <span x-show="$store.sidebar.open" 
+                      x-transition:enter="transition ease-out duration-200"
+                      x-transition:enter-start="opacity-0 -translate-x-2"
+                      x-transition:enter-end="opacity-100 translate-x-0"
+                      x-transition:leave="transition ease-in duration-150"
+                      x-transition:leave-start="opacity-100 translate-x-0"
+                      x-transition:leave-end="opacity-0 -translate-x-2"
+                      class="text-lg font-bold text-blue-600 whitespace-nowrap">SubscriptionHub</span>
             </button>
         </div>
 
-        <!-- Sidebar Links (Desktop) -->
-        <div class="hidden md:flex md:flex-col md:gap-2 md:p-6 md:w-full">
+        <!-- Navigation Links -->
+        <div class="flex-1 overflow-y-auto py-2 px-2">
             <a href="{{ route('dashboard') }}"
-               class="flex items-center px-4 py-3 text-sm font-bold uppercase tracking-widest rounded-xl transition duration-200 group {{ request()->routeIs('dashboard') ? 'bg-orange-500/10 text-orange-500 border border-orange-500/20' : 'text-zinc-400 hover:text-white hover:bg-zinc-800 border border-transparent' }}">
-                <svg class="w-5 h-5 mr-3 {{ request()->routeIs('dashboard') ? 'text-orange-500' : 'text-zinc-500 group-hover:text-white' }}" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+               @click="mobileOpen = false"
+               class="flex items-center px-3 py-2 rounded-md text-sm font-medium transition-colors {{ request()->routeIs('dashboard') ? 'bg-blue-50 text-blue-600' : 'text-gray-700 hover:bg-gray-50' }}">
+                <svg class="w-5 h-5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"/>
                 </svg>
-                Tableau de bord
+                <span x-show="$store.sidebar.open" 
+                      x-transition:enter="transition ease-out duration-200"
+                      x-transition:enter-start="opacity-0"
+                      x-transition:enter-end="opacity-100"
+                      x-transition:leave="transition ease-in duration-150"
+                      x-transition:leave-start="opacity-100"
+                      x-transition:leave-end="opacity-0"
+                      class="ml-3 whitespace-nowrap">Dashboard</span>
             </a>
 
             <a href="{{ route('members.index') }}"
-               class="flex items-center px-4 py-3 text-sm font-bold uppercase tracking-widest rounded-xl transition duration-200 group {{ request()->routeIs('members.*') ? 'bg-orange-500/10 text-orange-500 border border-orange-500/20' : 'text-zinc-400 hover:text-white hover:bg-zinc-800 border border-transparent' }}">
-                <svg class="w-5 h-5 mr-3 {{ request()->routeIs('members.*') ? 'text-orange-500' : 'text-zinc-500 group-hover:text-white' }}" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+               @click="mobileOpen = false"
+               class="flex items-center px-3 py-2 rounded-md text-sm font-medium transition-colors mt-1 {{ request()->routeIs('members.*') ? 'bg-blue-50 text-blue-600' : 'text-gray-700 hover:bg-gray-50' }}">
+                <svg class="w-5 h-5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"/>
                 </svg>
-                Membres
+                <span x-show="$store.sidebar.open" 
+                      x-transition:enter="transition ease-out duration-200"
+                      x-transition:enter-start="opacity-0"
+                      x-transition:enter-end="opacity-100"
+                      x-transition:leave="transition ease-in duration-150"
+                      x-transition:leave-start="opacity-100"
+                      x-transition:leave-end="opacity-0"
+                      class="ml-3 flex-1 whitespace-nowrap">Members</span>
+                <div x-show="$store.sidebar.open" 
+                     x-transition:enter="transition ease-out duration-200"
+                     x-transition:enter-start="opacity-0 scale-95"
+                     x-transition:enter-end="opacity-100 scale-100"
+                     x-transition:leave="transition ease-in duration-150"
+                     x-transition:leave-start="opacity-100 scale-100"
+                     x-transition:leave-end="opacity-0 scale-95"
+                     @click.stop
+                     class="ml-auto flex gap-1">
+                    <a href="{{ route('members.create') }}" 
+                       @click="mobileOpen = false"
+                       class="w-6 h-6 rounded-full bg-blue-600 text-white flex items-center justify-center hover:bg-blue-700 transition-colors text-xs shrink-0"
+                       title="Add Member">
+                        <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
+                        </svg>
+                    </a>
+                </div>
             </a>
 
             <a href="{{ route('training-types.index') }}"
-               class="flex items-center px-4 py-3 text-sm font-bold uppercase tracking-widest rounded-xl transition duration-200 group {{ request()->routeIs('training-types.*') || request()->routeIs('plans.*') ? 'bg-orange-500/10 text-orange-500 border border-orange-500/20' : 'text-zinc-400 hover:text-white hover:bg-zinc-800 border border-transparent' }}">
-                <svg class="w-5 h-5 mr-3 {{ request()->routeIs('training-types.*') || request()->routeIs('plans.*') ? 'text-orange-500' : 'text-zinc-500 group-hover:text-white' }}" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+               @click="mobileOpen = false"
+               class="flex items-center px-3 py-2 rounded-md text-sm font-medium transition-colors mt-1 {{ request()->routeIs('training-types.*') || request()->routeIs('plans.*') ? 'bg-blue-50 text-blue-600' : 'text-gray-700 hover:bg-gray-50' }}">
+                <svg class="w-5 h-5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
                 </svg>
-                Abonnements
+                <span x-show="$store.sidebar.open" 
+                      x-transition:enter="transition ease-out duration-200"
+                      x-transition:enter-start="opacity-0"
+                      x-transition:enter-end="opacity-100"
+                      x-transition:leave="transition ease-in duration-150"
+                      x-transition:leave-start="opacity-100"
+                      x-transition:leave-end="opacity-0"
+                      class="ml-3 flex-1 whitespace-nowrap">Subscriptions</span>
+                <div x-show="$store.sidebar.open" 
+                     x-transition:enter="transition ease-out duration-200"
+                     x-transition:enter-start="opacity-0 scale-95"
+                     x-transition:enter-end="opacity-100 scale-100"
+                     x-transition:leave="transition ease-in duration-150"
+                     x-transition:leave-start="opacity-100 scale-100"
+                     x-transition:leave-end="opacity-0 scale-95"
+                     @click.stop
+                     class="ml-auto flex gap-1">
+                    <a href="{{ route('training-types.create') }}" 
+                       @click="mobileOpen = false"
+                       class="w-6 h-6 rounded-full bg-green-600 text-white flex items-center justify-center hover:bg-green-700 transition-colors text-xs shrink-0"
+                       title="Add Type">
+                        <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
+                        </svg>
+                    </a>
+                </div>
             </a>
         </div>
-    </div>
 
-    <!-- User Profile Dropdown (Desktop - Bottom) -->
-    <div class="hidden md:block border-t border-zinc-800 p-4 bg-zinc-900/50">
-        <x-dropdown align="top" width="48" contentClasses="py-2 bg-zinc-800 border border-zinc-700 shadow-xl rounded-lg mb-2">
-            <x-slot name="trigger">
-                <button class="flex items-center w-full gap-3 px-3 py-2 rounded-lg text-left transition hover:bg-zinc-800 group">
-                    <div class="w-10 h-10 rounded-lg bg-zinc-700 flex items-center justify-center border border-zinc-600 group-hover:border-orange-500 transition shrink-0">
-                        <span class="text-orange-500 font-black">{{ substr(Auth::user()->name, 0, 1) }}</span>
-                    </div>
-                    <div class="flex-1 min-w-0">
-                        <p class="text-sm font-bold text-white truncate">{{ Auth::user()->name }}</p>
-                        <p class="text-xs text-zinc-500 truncate">{{ Auth::user()->email }}</p>
-                    </div>
-                    <svg class="w-5 h-5 text-zinc-500 group-hover:text-white transition" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 9l4-4 4 4m0 6l-4 4-4-4" />
-                    </svg>
-                </button>
-            </x-slot>
-
-            <x-slot name="content">
-                <x-dropdown-link :href="route('profile.edit')" class="text-zinc-300 hover:bg-zinc-700 hover:text-orange-400">
-                    <div class="flex items-center gap-2">
-                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/>
-                        </svg>
-                        {{ __('Profil') }}
-                    </div>
-                </x-dropdown-link>
-
-                <!-- Authentication -->
-                <form method="POST" action="{{ route('logout') }}">
+        <!-- User Block (Bottom) -->
+        <div class="border-t border-gray-200 p-4 mt-auto shrink-0">
+            <div x-show="$store.sidebar.open" 
+                 x-transition:enter="transition ease-out duration-200"
+                 x-transition:enter-start="opacity-0"
+                 x-transition:enter-end="opacity-100"
+                 x-transition:leave="transition ease-in duration-150"
+                 x-transition:leave-start="opacity-100"
+                 x-transition:leave-end="opacity-0"
+                 class="flex items-center justify-between">
+                <div class="flex-1 min-w-0">
+                    <p class="text-sm font-medium text-gray-900 truncate">{{ Auth::user()->name }}</p>
+                    <p class="text-xs text-gray-500 truncate">System Administrator</p>
+                </div>
+                <form method="POST" action="{{ route('logout') }}" @click.stop>
                     @csrf
-                    <x-dropdown-link :href="route('logout')"
+                    <button type="submit" 
                             onclick="event.preventDefault(); this.closest('form').submit();"
-                            class="text-red-400 hover:bg-red-500/10">
-                        <div class="flex items-center gap-2">
-                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/>
-                            </svg>
-                            {{ __('Se déconnecter') }}
-                        </div>
-                    </x-dropdown-link>
+                            class="p-2 text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-lg transition-colors shrink-0">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/>
+                        </svg>
+                    </button>
                 </form>
-            </x-slot>
-        </x-dropdown>
-    </div>
-
-    <!-- Responsive Navigation Menu (Mobile) -->
-    <div :class="{'block': open, 'hidden': ! open}" class="hidden sm:hidden bg-zinc-900 border-t border-zinc-800">
-        <div class="pt-2 pb-3 space-y-1">
-            <x-responsive-nav-link :href="route('dashboard')" :active="request()->routeIs('dashboard')" class="text-zinc-300 hover:text-orange-500 hover:bg-zinc-800">
-                Tableau de bord
-            </x-responsive-nav-link>
-            <x-responsive-nav-link :href="route('members.index')" :active="request()->routeIs('members.*')" class="text-zinc-300 hover:text-orange-500 hover:bg-zinc-800">
-                Membres
-            </x-responsive-nav-link>
-            <x-responsive-nav-link :href="route('training-types.index')" :active="request()->routeIs('training-types.*')" class="text-zinc-300 hover:text-orange-500 hover:bg-zinc-800">
-                Abonnements
-            </x-responsive-nav-link>
-        </div>
-
-        <!-- Responsive Settings Options -->
-        <div class="pt-4 pb-1 border-t border-zinc-800">
-            <div class="px-4">
-                <div class="font-medium text-base text-zinc-200">{{ Auth::user()->name }}</div>
-                <div class="font-medium text-sm text-zinc-500">{{ Auth::user()->email }}</div>
             </div>
-
-            <div class="mt-3 space-y-1">
-                <x-responsive-nav-link :href="route('profile.edit')" class="text-zinc-400 hover:text-orange-500">
-                    {{ __('Profil') }}
-                </x-responsive-nav-link>
-
-                <!-- Authentication -->
-                <form method="POST" action="{{ route('logout') }}">
+            <div x-show="!$store.sidebar.open" 
+                 x-transition:enter="transition ease-out duration-200"
+                 x-transition:enter-start="opacity-0"
+                 x-transition:enter-end="opacity-100"
+                 x-transition:leave="transition ease-in duration-150"
+                 x-transition:leave-start="opacity-100"
+                 x-transition:leave-end="opacity-0"
+                 class="flex justify-center">
+                <form method="POST" action="{{ route('logout') }}" @click.stop>
                     @csrf
-                    <x-responsive-nav-link :href="route('logout')"
-                            onclick="event.preventDefault(); this.closest('form').submit();" class="text-red-400">
-                        {{ __('Se déconnecter') }}
-                    </x-responsive-nav-link>
+                    <button type="submit" 
+                            onclick="event.preventDefault(); this.closest('form').submit();"
+                            class="p-2 text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-lg transition-colors">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/>
+                        </svg>
+                    </button>
                 </form>
             </div>
         </div>

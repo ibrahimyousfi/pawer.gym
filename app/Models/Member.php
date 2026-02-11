@@ -7,7 +7,6 @@ use Illuminate\Database\Eloquent\Model;
 class Member extends Model
 {
     protected $fillable = [
-        'gym_id',
         'full_name',
         'phone',
         'cin',
@@ -18,11 +17,6 @@ class Member extends Model
     public function subscriptions()
     {
         return $this->hasMany(Subscription::class);
-    }
-
-    public function gym()
-    {
-        return $this->belongsTo(Gym::class);
     }
 
     /*

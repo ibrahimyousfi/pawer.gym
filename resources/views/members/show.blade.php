@@ -1,15 +1,4 @@
 <x-app-layout>
-    <x-slot name="header">
-        <div class="flex justify-between items-center">
-            <h2 class="font-semibold text-2xl leading-tight no-print">
-                Member Details
-            </h2>
-            <a href="{{ route('members.index') }}" class="text-emerald-600 hover:text-emerald-800 no-print">
-                ← Back to Members
-            </a>
-        </div>
-    </x-slot>
-
     @if(request()->has('print'))
     <style>
         @media print {

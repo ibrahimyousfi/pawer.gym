@@ -1,15 +1,4 @@
 <x-app-layout>
-    <x-slot name="header">
-        <div class="flex justify-between items-center">
-            <h2 class="font-black italic uppercase tracking-tighter text-3xl text-white leading-tight">
-                {{ __('Types d\'Abonnement') }}
-            </h2>
-            <a href="{{ route('training-types.create') }}" class="bg-orange-600 text-white px-4 py-2 rounded-lg font-bold uppercase tracking-wider hover:bg-orange-700 transition shadow-lg shadow-orange-900/20">
-                + Nouveau Type
-            </a>
-        </div>
-    </x-slot>
-
     <div class="py-12">
         <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
             <div class="bg-zinc-900 overflow-hidden shadow-lg border border-zinc-800 sm:rounded-xl">
@@ -26,7 +15,7 @@
                                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"></path>
                                                 </svg>
                                             </a>
-                                            <form action="{{ route('training-types.destroy', $type) }}" method="POST" onsubmit="return confirm('Êtes-vous sûr ?');" class="inline">
+                                            <form action="{{ route('training-types.destroy', $type) }}" method="POST" onsubmit="return confirm('Are you sure?');" class="inline">
                                                 @csrf
                                                 @method('DELETE')
                                                 <button type="submit" class="text-zinc-500 hover:text-red-600 transition">
@@ -37,12 +26,12 @@
                                             </form>
                                         </div>
                                     </div>
-                                    <p class="text-zinc-500 mb-6 text-sm line-clamp-2">{{ $type->description ?? 'Aucune description' }}</p>
+                                    <p class="text-zinc-500 mb-6 text-sm line-clamp-2">{{ $type->description ?? 'No description' }}</p>
 
                                     <div class="flex justify-between items-center text-sm text-zinc-500 border-t border-zinc-800 pt-4 mt-auto">
                                         <span class="font-bold text-zinc-400">{{ $type->plans_count }} Plans</span>
                                         <a href="{{ route('training-types.show', $type) }}" class="text-orange-500 hover:text-orange-400 font-bold uppercase text-xs tracking-wider flex items-center gap-1 group-hover:gap-2 transition-all">
-                                            Détails <span>&rarr;</span>
+                                            Details <span>&rarr;</span>
                                         </a>
                                     </div>
                                 </div>
@@ -55,8 +44,8 @@
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"></path>
                                 </svg>
                             </div>
-                            <p class="text-zinc-500 mb-4">Aucun type d'abonnement ajouté pour le moment.</p>
-                            <a href="{{ route('training-types.create') }}" class="text-orange-500 hover:text-orange-400 font-bold uppercase tracking-wider">Commencez par ajouter le premier type</a>
+                            <p class="text-zinc-500 mb-4">No subscription types added yet.</p>
+                            <a href="{{ route('training-types.create') }}" class="text-orange-500 hover:text-orange-400 font-bold uppercase tracking-wider">Start by adding the first type</a>
                         </div>
                     @endif
                 </div>

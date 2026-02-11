@@ -13,11 +13,14 @@ class PlanController extends Controller
      */
     public function create(Request $request)
     {
-        $gym = auth()->user()->gym;
-        $trainingTypes = $gym->trainingTypes;
+        $trainingTypes = TrainingType::all();
         $selectedTrainingTypeId = $request->training_type_id;
 
-        return view('plans.create', compact('trainingTypes', 'selectedTrainingTypeId'));
+        return view('abn.plans.create', compact('trainingTypes', 'selectedTrainingTypeId'))
+            ->with('pageTitle', 'Create Subscription Plan')
+            ->with('pageActionUrl', $selectedTrainingTypeId ? route('training-types.show', $selectedTrainingTypeId) : route('training-types.index'))
+            ->with('pageActionLabel', 'Back')
+            ->with('pageShowAction', true);
     }
 
     /**
@@ -25,8 +28,6 @@ class PlanController extends Controller
      */
     public function store(Request $request)
     {
-        $gym = auth()->user()->gym;
-
         $validated = $request->validate([
             'training_type_id' => 'required|exists:training_types,id',
             'name' => 'required|string|max:255',
@@ -34,11 +35,9 @@ class PlanController extends Controller
             'price' => 'required|numeric|min:0',
         ]);
 
-        // Verify training type belongs to gym
-        $trainingType = $gym->trainingTypes()->findOrFail($validated['training_type_id']);
+        $trainingType = TrainingType::findOrFail($validated['training_type_id']);
 
         Plan::create([
-            'gym_id' => $gym->id,
             'training_type_id' => $trainingType->id,
             'name' => $validated['name'],
             'duration_days' => $validated['duration_days'],
@@ -46,7 +45,7 @@ class PlanController extends Controller
             'is_active' => true,
         ]);
 
-        return redirect()->route('training-types.show', $trainingType)->with('success', 'تم إضافة خطة الاشتراك بنجاح.');
+        return redirect()->route('training-types.show', $trainingType)->with('success', 'Subscription plan created successfully.');
     }
 
     /**
@@ -54,8 +53,12 @@ class PlanController extends Controller
      */
     public function edit(Plan $plan)
     {
-        $this->authorizePlan($plan);
-        return view('plans.edit', compact('plan'));
+        return view('abn.plans.edit', compact('plan'))
+            ->with('pageTitle', 'Edit Subscription Plan')
+            ->with('pageSubtitle', $plan->name)
+            ->with('pageActionUrl', route('training-types.show', $plan->training_type_id))
+            ->with('pageActionLabel', 'Back to Type')
+            ->with('pageShowAction', true);
     }
 
     /**
@@ -63,8 +66,6 @@ class PlanController extends Controller
      */
     public function update(Request $request, Plan $plan)
     {
-        $this->authorizePlan($plan);
-
         $validated = $request->validate([
             'name' => 'required|string|max:255',
             'duration_days' => 'required|integer|min:1',
@@ -74,7 +75,7 @@ class PlanController extends Controller
 
         $plan->update($validated);
 
-        return redirect()->route('training-types.show', $plan->training_type_id)->with('success', 'تم تحديث خطة الاشتراك بنجاح.');
+        return redirect()->route('training-types.show', $plan->training_type_id)->with('success', 'Subscription plan updated successfully.');
     }
 
     /**
@@ -82,17 +83,9 @@ class PlanController extends Controller
      */
     public function destroy(Plan $plan)
     {
-        $this->authorizePlan($plan);
         $trainingTypeId = $plan->training_type_id;
         $plan->delete();
 
-        return redirect()->route('training-types.show', $trainingTypeId)->with('success', 'تم حذف خطة الاشتراك بنجاح.');
-    }
-
-    private function authorizePlan(Plan $plan)
-    {
-        if ($plan->gym_id !== auth()->user()->gym_id) {
-            abort(403, 'Unauthorized action.');
-        }
+        return redirect()->route('training-types.show', $trainingTypeId)->with('success', 'Subscription plan deleted successfully.');
     }
 }

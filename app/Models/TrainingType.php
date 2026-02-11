@@ -7,7 +7,6 @@ use Illuminate\Database\Eloquent\Model;
 class TrainingType extends Model
 {
     protected $fillable = [
-        'gym_id',
         'name',
         'description',
     ];
@@ -15,10 +14,5 @@ class TrainingType extends Model
     public function plans()
     {
         return $this->hasMany(Plan::class);
-    }
-
-    public function gym()
-    {
-        return $this->belongsTo(Gym::class);
     }
 }

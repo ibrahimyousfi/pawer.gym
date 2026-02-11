@@ -1,10 +1,4 @@
 <x-app-layout>
-    <x-slot name="header">
-        <h2 class="font-black italic uppercase tracking-tighter text-3xl text-white leading-tight">
-            {{ __('Ajouter un Membre') }}
-        </h2>
-    </x-slot>
-
     <div class="py-8">
         <div class="max-w-4xl mx-auto sm:px-6 lg:px-8">
             <div class="bg-zinc-900 border border-zinc-800 overflow-hidden shadow-lg sm:rounded-xl">

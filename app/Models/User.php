@@ -21,24 +21,7 @@ class User extends Authenticatable
         'name',
         'email',
         'password',
-        'role',
-        'gym_id',
     ];
-
-    public function gym()
-    {
-        return $this->belongsTo(Gym::class);
-    }
-
-    public function isSuperAdmin()
-    {
-        return $this->role === 'super_admin';
-    }
-
-    public function isGymAdmin()
-    {
-        return $this->role === 'gym_admin';
-    }
 
     /**
      * The attributes that should be hidden for serialization.
